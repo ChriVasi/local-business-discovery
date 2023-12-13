@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Local Business Discovery</string>
+    <string name="first_launch_key">first_launch</string>
+
+    <string name="key_email">email_key</string>
+    <string name="key_password">password_key</string>
+</resources>

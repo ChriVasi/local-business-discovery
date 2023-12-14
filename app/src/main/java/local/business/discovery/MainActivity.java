@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private BusinessAdapter businessAdapter;
     private MapView mapView;
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 1; // You can use any integer value
+
     // Declare the MyLocationNewOverlay as a class-level variable
     private MyLocationNewOverlay myLocationOverlay;
 
@@ -61,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-// Check if internet connection is available
+        // Check if internet connection is available
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
         if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting()) {
@@ -70,19 +71,19 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-// Initialize osmdroid
+     // Initialize osmdroid
         Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
 
         setContentView(R.layout.activity_main);
 
-// Initialize Toolbar
+        // Initialize Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-// Initialize MapView
+        // Initialize MapView
         mapView = findViewById(R.id.mapView);
 
-// Check if the permission is not granted
+        // Check if the permission is not granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // Request the permission
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
@@ -107,15 +108,15 @@ public class MainActivity extends AppCompatActivity {
             Log.e("MainActivity", "MapView not found in the layout");
         }
 
-// Initialize RecyclerView
+        // Initialize RecyclerView
         RecyclerView recyclerView = findViewById(R.id.businessRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-// Initialize the adapter with an empty list
+        // Initialize the adapter with an empty list
         businessAdapter = new BusinessAdapter(new ArrayList<>());
         recyclerView.setAdapter(businessAdapter);
 
-// Load businesses dynamically
+        // Load businesses dynamically
         loadBusinesses();
     }
 
@@ -194,12 +195,22 @@ public class MainActivity extends AppCompatActivity {
         // Replace this with your logic to load businesses for the logged-in user
         // For testing, you can still add hardcoded businesses
         List<Business> businesses = new ArrayList<>();
+
         businesses.add(Business.newBuilder("Local Souvlaki", "Souvlaki & Pastries", "Agias Paraskevis 17", 39.37913, 22.95989)
                 .addReview(new Review("User1", 4.5, "Great place"))
                 .addReview(new Review("User2", 5.0, "Excellent service"))
                 .build());
 
-        // Add more businesses as needed
+        // Add more businesses
+        businesses.add(Business.newBuilder("Cafe Delight", "Coffee & Snacks", "Main Street 123", 39.37856, 22.95872)
+                .addReview(new Review("User3", 4.2, "Cozy atmosphere"))
+                .addReview(new Review("User4", 4.8, "Best coffee in town"))
+                .build());
+
+        businesses.add(Business.newBuilder("Pizza Haven", "Pizza & Italian Cuisine", "Broadway Avenue 456", 39.37791, 22.95945)
+                .addReview(new Review("User5", 4.7, "Delicious pizzas"))
+                .addReview(new Review("User6", 4.5, "Friendly staff"))
+                .build());
 
         // Check if businessAdapter is null, initialize it if needed
         if (businessAdapter == null) {
@@ -221,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
     private void displayMarkersOnMap(List<Business> businesses) {
         List<IGeoPoint> geoPoints = businesses.stream()
                 .map(business -> new GeoPoint(business.getLatitude(), business.getLongitude()))
@@ -228,17 +240,35 @@ public class MainActivity extends AppCompatActivity {
 
         BoundingBox boundingBox = BoundingBox.fromGeoPoints(geoPoints);
 
-
         for (Business business : businesses) {
             GeoPoint geoPoint = new GeoPoint(business.getLatitude(), business.getLongitude());
             CustomMarker marker = new CustomMarker(mapView);
             marker.setPosition(geoPoint);
             marker.setTitle(business.getName());
+
+            // Add a snippet with business details to be displayed on marker click
+            marker.setSnippet("Category: " + business.getCategory() + "\nTap for details");
+
             mapView.getOverlays().add(marker);
+
+            // Set a click listener for the marker
+            marker.setOnMarkerClickListener((marker1, mapView) -> {
+                // Launch the DetailsActivity or show details in some way
+                launchDetailsActivity(business);
+                return true;
+            });
         }
 
         mapView.invalidate(); // Refresh the map
     }
+
+    // Method to launch the DetailsActivity with the selected business
+    private void launchDetailsActivity(Business business) {
+        Intent intent = new Intent(this, DetailsActivity.class);
+        intent.putExtra("business", business);
+        startActivity(intent);
+    }
+
 
     private int calculateZoomLevel(BoundingBox boundingBox, int width, int height) {
         final int border = 20;
@@ -337,6 +367,8 @@ public class MainActivity extends AppCompatActivity {
         public CustomMarker(MapView mapView) {
             super(mapView);
             // Customize the marker appearance here, e.g., setIcon, setAnchor, etc.
+            // Example: setIcon(getResources().getDrawable(R.drawable.custom_marker_icon));
         }
     }
+
 }

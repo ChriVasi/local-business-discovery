@@ -33,6 +33,10 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".DetailsActivity">
+            <!-- Add any intent filters or other configuration as needed -->
+        </activity>
+        
         <!-- Define UserAuthActivity for user authentication -->
         <activity
             android:name=".LoginActivity"

@@ -1,12 +1,14 @@
 package local.business.discovery;
 
-public class Review {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Review implements Parcelable {
 
         private final String userName;
         private final double rating;
         private final String comment;
 
-        // Make the constructor public
         public Review(String userName, double rating, String comment) {
                 this.userName = userName;
                 this.rating = rating;
@@ -25,24 +27,34 @@ public class Review {
                 return comment;
         }
 
-        // Builder pattern for constructing reviews
-        public static class ReviewBuilder {
-                private final String userName;
-                private final double rating;
-                private String comment;
-
-                public ReviewBuilder(String userName, double rating) {
-                        this.userName = userName;
-                        this.rating = rating;
-                }
-
-                public ReviewBuilder comment(String comment) {
-                        this.comment = comment;
-                        return this;
-                }
-
-                public Review build() {
-                        return new Review(userName, rating, comment);
-                }
+        // Parcelable implementation
+        protected Review(Parcel in) {
+                userName = in.readString();
+                rating = in.readDouble();
+                comment = in.readString();
         }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+                dest.writeString(userName);
+                dest.writeDouble(rating);
+                dest.writeString(comment);
+        }
+
+        @Override
+        public int describeContents() {
+                return 0;
+        }
+
+        public static final Parcelable.Creator<Review> CREATOR = new Parcelable.Creator<Review>() {
+                @Override
+                public Review createFromParcel(Parcel in) {
+                        return new Review(in);
+                }
+
+                @Override
+                public Review[] newArray(int size) {
+                        return new Review[size];
+                }
+        };
 }

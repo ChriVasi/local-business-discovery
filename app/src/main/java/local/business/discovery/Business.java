@@ -1,10 +1,13 @@
 package local.business.discovery;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Business {
+public class Business implements Parcelable {
 
     private final String name;
     private final String category;
@@ -77,4 +80,42 @@ public class Business {
             return new Business(this);
         }
     }
+
+    // Parcelable implementation
+    protected Business(Parcel in) {
+        name = in.readString();
+        category = in.readString();
+        address = in.readString();
+        latitude = in.readDouble();
+        longitude = in.readDouble();
+        reviews = new ArrayList<>();
+        in.readList(reviews, Review.class.getClassLoader());
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(category);
+        dest.writeString(address);
+        dest.writeDouble(latitude);
+        dest.writeDouble(longitude);
+        dest.writeList(reviews);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Parcelable.Creator<Business> CREATOR = new Parcelable.Creator<Business>() {
+        @Override
+        public Business createFromParcel(Parcel in) {
+            return new Business(in);
+        }
+
+        @Override
+        public Business[] newArray(int size) {
+            return new Business[size];
+        }
+    };
 }

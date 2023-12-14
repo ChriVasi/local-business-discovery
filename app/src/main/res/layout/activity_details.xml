@@ -26,7 +26,7 @@
         android:id="@+id/textViewReviews"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Reviews will be displayed here."
+        android:text="Reviews:\n"
         android:layout_below="@id/businessCategoryTextView"
         android:layout_marginTop="16dp"/>
 

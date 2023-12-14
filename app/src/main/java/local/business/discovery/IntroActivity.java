@@ -19,7 +19,7 @@ public class IntroActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Start the login activity when the button is clicked
-                startActivity(new Intent(IntroActivity.this, LoginActivity.class));
+                startActivity(new Intent(IntroActivity.this, MainActivity.class));
                 finish(); // Close the intro activity
             }
         });

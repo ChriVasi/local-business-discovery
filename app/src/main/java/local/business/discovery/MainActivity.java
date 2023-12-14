@@ -1,19 +1,27 @@
 package local.business.discovery;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.SearchView;
@@ -28,6 +36,7 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
 
     private BusinessAdapter businessAdapter;
     private MapView mapView;
+    private static final int MY_PERMISSIONS_REQUEST_LOCATION = 1; // You can use any integer value
+    // Declare the MyLocationNewOverlay as a class-level variable
+    private MyLocationNewOverlay myLocationOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Check if internet connection is available
+// Check if internet connection is available
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
         if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting()) {
@@ -58,36 +70,100 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Initialize osmdroid
+// Initialize osmdroid
         Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
 
         setContentView(R.layout.activity_main);
 
-        // Initialize Toolbar
+// Initialize Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Initialize RecyclerView
+// Initialize MapView
+        mapView = findViewById(R.id.mapView);
+
+// Check if the permission is not granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Request the permission
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
+        } else {
+            // Permission already granted, initialize and enable MyLocationNewOverlay
+            initializeMyLocationOverlay();
+        }
+
+        if (mapView != null) {
+            // Continue with initialization and usage
+            mapView.setTileSource(TileSourceFactory.MAPNIK);
+            mapView.getController().setZoom(5.0);
+            mapView.setMultiTouchControls(true);
+
+            // Initialize MyLocationNewOverlay
+            initializeMyLocationOverlay();
+
+            // Other operations involving mapView
+            loadBusinesses();
+        } else {
+            // Handle the case where mapView is not found in the layout
+            Log.e("MainActivity", "MapView not found in the layout");
+        }
+
+// Initialize RecyclerView
         RecyclerView recyclerView = findViewById(R.id.businessRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Initialize the adapter with an empty list
+// Initialize the adapter with an empty list
         businessAdapter = new BusinessAdapter(new ArrayList<>());
         recyclerView.setAdapter(businessAdapter);
 
-        // Initialize MapView
-        mapView = findViewById(R.id.mapView);
-        mapView.setTileSource(TileSourceFactory.MAPNIK);
-        mapView.getController().setZoom(10.0); // Set a default zoom level (adjust as needed)
-        mapView.setMultiTouchControls(true);
-
-        // Enable my location
-        MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(mapView);
-        mapView.getOverlays().add(myLocationOverlay);
-        myLocationOverlay.enableMyLocation();
-
-        // Load businesses dynamically
+// Load businesses dynamically
         loadBusinesses();
+    }
+
+        @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == MY_PERMISSIONS_REQUEST_LOCATION) {
+            // Check if the permission was granted
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, initialize and enable MyLocationNewOverlay
+                initializeMyLocationOverlay();
+            } else {
+                // Permission denied, handle accordingly
+                Log.e("LocationDebug", "Location permission denied");
+            }
+        }
+    }
+
+    private void initializeMyLocationOverlay() {
+        // Check if the permission is not granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Request the permission
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
+        } else {
+            // Permission already granted, initialize and enable MyLocationNewOverlay
+            myLocationOverlay = new MyLocationNewOverlay(mapView);
+            mapView.getOverlays().add(myLocationOverlay);
+            myLocationOverlay.enableMyLocation();
+
+            // Zoom to your current location
+            GeoPoint myLocation = myLocationOverlay.getMyLocation();
+            if (myLocation != null) {
+                mapView.getController().animateTo(myLocation);
+                mapView.getController().setZoom(15.0); // Adjust the zoom level as needed
+            }
+        }
+    }
+
+
+    public void zoomToMyLocation(View view) {
+        if (myLocationOverlay != null) {
+            GeoPoint myLocation = myLocationOverlay.getMyLocation();
+            if (myLocation != null) {
+                mapView.getController().animateTo(myLocation);
+                mapView.getController().setZoom(15.0); // Adjust the zoom level as needed
+            }
+        }
     }
 
     private void buildAlertMessageNoGps() {
@@ -125,12 +201,25 @@ public class MainActivity extends AppCompatActivity {
 
         // Add more businesses as needed
 
+        // Check if businessAdapter is null, initialize it if needed
+        if (businessAdapter == null) {
+            // Initialize RecyclerView
+            RecyclerView recyclerView = findViewById(R.id.businessRecyclerView);
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+            // Initialize the adapter with an empty list
+            businessAdapter = new BusinessAdapter(new ArrayList<>());
+            recyclerView.setAdapter(businessAdapter);
+        }
+
         // Update the adapter with the new list of businesses
         businessAdapter.updateData(businesses);
 
         // Display markers on the map
         displayMarkersOnMap(businesses);
     }
+
+
 
     private void displayMarkersOnMap(List<Business> businesses) {
         List<IGeoPoint> geoPoints = businesses.stream()
@@ -139,12 +228,6 @@ public class MainActivity extends AppCompatActivity {
 
         BoundingBox boundingBox = BoundingBox.fromGeoPoints(geoPoints);
 
-        // Calculate the zoom level based on the bounding box
-        int padding = 50; // You can adjust this padding based on your preference
-        int zoomLevel = calculateZoomLevel(boundingBox, mapView.getWidth() - 2 * padding, mapView.getHeight() - 2 * padding);
-
-        // Zoom to the bounding box with the calculated zoom level
-        mapView.zoomToBoundingBox(boundingBox, true, zoomLevel);
 
         for (Business business : businesses) {
             GeoPoint geoPoint = new GeoPoint(business.getLatitude(), business.getLongitude());
@@ -199,16 +282,55 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                // Handle the submission of the search query if needed
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                businessAdapter.getFilter().filter(newText);
+                // Filter the businesses based on the search query
+                List<Business> filteredBusinesses = filterBusinesses(businessAdapter.getData(), newText);
+
+                // Update the adapter with the filtered businesses
+                businessAdapter.updateData(filteredBusinesses);
+
+                // Display the markers for filtered businesses on the map
+                displayMarkersOnMap(filteredBusinesses);
+
                 return false;
             }
         });
     }
+    private List<Business> filterBusinesses(List<Business> businesses, String query) {
+        String lowerCaseQuery = query.toLowerCase();
+
+        return businesses.stream()
+                .filter(business ->
+                        business.getName().toLowerCase().contains(lowerCaseQuery) ||
+                                business.getCategory().toLowerCase().contains(lowerCaseQuery) ||
+                                business.getAddress().toLowerCase().contains(lowerCaseQuery))
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // Save your state variables here
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        // Restore your state variables here
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Release any resources here
+    }
+
 
     // Custom Marker class for marker customization
     private static class CustomMarker extends Marker {

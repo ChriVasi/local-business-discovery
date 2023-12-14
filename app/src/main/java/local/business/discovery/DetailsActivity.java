@@ -24,17 +24,29 @@ public class DetailsActivity extends AppCompatActivity {
         // Retrieve business details from intent
         business = getIntent().getParcelableExtra("business");
 
-        // Update UI with business details
-        TextView nameTextView = findViewById(R.id.businessNameTextView);
-        TextView categoryTextView = findViewById(R.id.businessCategoryTextView);
+        // Check if business is not null before accessing its properties
+        if (business != null) {
+            // Update UI with business details
+            TextView nameTextView = findViewById(R.id.businessNameTextView);
+            TextView categoryTextView = findViewById(R.id.businessCategoryTextView);
 
-        nameTextView.setText(business.getName());
-        categoryTextView.setText(business.getCategory());
+            nameTextView.setText(business.getName());
+            categoryTextView.setText(business.getCategory());
 
-        // Display reviews in a TextView or RecyclerView
-        displayReviews(business);
+            // Display reviews in a TextView or RecyclerView
+            displayReviews(business);
 
-        // Obtain the MapView and configure it
+            // Configure the map view
+            configureMapView();
+        } else {
+            // Handle the case where business is null
+            // You may want to show an error message or finish the activity
+            // depending on your application's requirements.
+            finish();
+        }
+    }
+
+    private void configureMapView() {
         MapView mapView = findViewById(R.id.mapView);
         mapView.setTileSource(TileSourceFactory.MAPNIK);
         mapView.setBuiltInZoomControls(true);

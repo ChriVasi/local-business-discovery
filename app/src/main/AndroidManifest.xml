@@ -5,7 +5,10 @@
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Add this permission to your AndroidManifest.xml file -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
 
 
     <application
@@ -30,6 +33,10 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".DetailsActivity">
+            <!-- Add any intent filters or other configuration as needed -->
+        </activity>
+        
         <!-- Define UserAuthActivity for user authentication -->
         <activity
             android:name=".LoginActivity"

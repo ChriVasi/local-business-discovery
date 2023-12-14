@@ -93,4 +93,11 @@ public class BusinessAdapter extends RecyclerView.Adapter<BusinessAdapter.Busine
             }
         };
     }
+
+    public void updateData(List<Business> newBusinesses) {
+        businesses = new ArrayList<>(newBusinesses);
+        filteredList.clear();
+        filteredList.addAll(businesses);
+        notifyDataSetChanged();
+    }
 }

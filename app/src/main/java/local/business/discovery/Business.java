@@ -1,6 +1,7 @@
 package local.business.discovery;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Business {
@@ -18,7 +19,8 @@ public class Business {
         this.address = builder.address;
         this.latitude = builder.latitude;
         this.longitude = builder.longitude;
-        this.reviews = new ArrayList<>(builder.reviews);
+        // Use an unmodifiable list to make reviews immutable
+        this.reviews = Collections.unmodifiableList(new ArrayList<>(builder.reviews));
     }
 
     public List<Review> getReviews() {
@@ -45,6 +47,10 @@ public class Business {
         return longitude;
     }
 
+    public static Builder newBuilder(String name, String category, String address, double latitude, double longitude) {
+        return new Builder(name, category, address, latitude, longitude);
+    }
+
     public static class Builder {
         private final String name;
         private final String category;
@@ -53,7 +59,7 @@ public class Business {
         private final double longitude;
         private final List<Review> reviews;
 
-        public Builder(String name, String category, String address, double latitude, double longitude) {
+        private Builder(String name, String category, String address, double latitude, double longitude) {
             this.name = name;
             this.category = category;
             this.address = address;

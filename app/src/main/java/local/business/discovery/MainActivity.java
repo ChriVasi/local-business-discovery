@@ -231,35 +231,58 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-
     private void displayMarkersOnMap(List<Business> businesses) {
-        List<IGeoPoint> geoPoints = businesses.stream()
-                .map(business -> new GeoPoint(business.getLatitude(), business.getLongitude()))
-                .collect(Collectors.toList());
-
-        BoundingBox boundingBox = BoundingBox.fromGeoPoints(geoPoints);
+        List<IGeoPoint> geoPoints = new ArrayList<>();
 
         for (Business business : businesses) {
-            GeoPoint geoPoint = new GeoPoint(business.getLatitude(), business.getLongitude());
-            CustomMarker marker = new CustomMarker(mapView);
-            marker.setPosition(geoPoint);
-            marker.setTitle(business.getName());
+            double latitude = business.getLatitude();
+            double longitude = business.getLongitude();
 
-            // Add a snippet with business details to be displayed on marker click
-            marker.setSnippet("Category: " + business.getCategory() + "\nTap for details");
+            // Ensure latitude is within the valid range
+            if (latitude < -85.05112877980658) {
+                latitude = -85.05112877980658;
+            } else if (latitude > 85.05112877980658) {
+                latitude = 85.05112877980658;
+            }
 
-            mapView.getOverlays().add(marker);
+            GeoPoint geoPoint = new GeoPoint(latitude, longitude);
+            geoPoints.add(geoPoint);
 
-            // Set a click listener for the marker
-            marker.setOnMarkerClickListener((marker1, mapView) -> {
-                // Launch the DetailsActivity or show details in some way
-                launchDetailsActivity(business);
-                return true;
-            });
+            // Log for debugging
+            Log.d("LatitudeDebug", "Latitude: " + geoPoint.getLatitude());
         }
 
-        mapView.invalidate(); // Refresh the map
+        if (!geoPoints.isEmpty()) {
+            BoundingBox boundingBox = BoundingBox.fromGeoPoints(geoPoints);
+
+            // Set a fixed zoom level
+            double fixedZoomLevel = 12.0;
+            mapView.getController().setZoom(fixedZoomLevel);
+
+            // Center the map on the first GeoPoint
+            mapView.getController().setCenter(geoPoints.get(0));
+
+            for (Business business : businesses) {
+                GeoPoint geoPoint = new GeoPoint(business.getLatitude(), business.getLongitude());
+                CustomMarker marker = new CustomMarker(mapView);
+                marker.setPosition(geoPoint);
+                marker.setTitle(business.getName());
+
+                // Add a snippet with business details to be displayed on marker click
+                marker.setSnippet("Category: " + business.getCategory() + "\nTap for details");
+
+                mapView.getOverlays().add(marker);
+
+                // Set a click listener for the marker
+                marker.setOnMarkerClickListener((marker1, mapView) -> {
+                    // Launch the DetailsActivity or show details in some way
+                    launchDetailsActivity(business);
+                    return true;
+                });
+            }
+
+            mapView.invalidate(); // Refresh the map
+        }
     }
 
     // Method to launch the DetailsActivity with the selected business

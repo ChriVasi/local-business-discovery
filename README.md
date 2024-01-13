@@ -16,6 +16,7 @@ This is a Local Business Android app developed in Java. The app allows users to 
 
 - Android Studio installed
 - Emulator or physical Android device for testing
+- -Internet access
 
 ## Getting Started
 
